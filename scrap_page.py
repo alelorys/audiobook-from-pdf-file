@@ -1,6 +1,5 @@
 import requests
 import logging
-from gtts import gTTS
 from bs4 import BeautifulSoup
 
 '''
@@ -11,32 +10,29 @@ from bs4 import BeautifulSoup
 '''
 
 logging.basicConfig(level=logging.INFO)
+tags_to_remove = ['<p>','</p>','<q>','</q>']
 
 def open_link(link:str) -> str:
     logging.info('open link')
     page_content = requests.get(link)
     return page_content.content
 
-def get_text(content) -> str:
+def get_text_from_page(content) -> str:
     logging.info('scraping text from link')
     soup = BeautifulSoup(content, 'html.parser')
-    return soup.get_text()
+    paras = soup.find_all('p')
+    paras = "".join(str(paras))
 
-def text_to_speech(content:str) -> gTTS:
-    logging.info("converting text to audio format")
-    lang = 'en'
-    return gTTS(content,lang=lang,tld='com',slow=False)
+    for tag in tags_to_remove:
+        paras = paras.replace(tag,'')
 
-def save_audio(audio: gTTS, title):
-    logging.info("saving audio file")
-    audio.save(title)
+    with open('page.txt','w',encoding='utf-8') as f:
+        f.writelines(paras)
+    return paras
 
-def main():
-    logging.info("let's fun begin")
-    link = 'https://lwn.net/Articles/988894/'
-    text = get_text(open_link(link))
-    save_audio(text_to_speech(text),'test.mp3')
-    logging.info("audiobook is complete :)")
+def get_text_from_file(file_name):
+    with open(f'{file_name}.txt', 'r') as file:
+        content = file.readlines()
 
-if __name__ == "__main__":
-    main()
+        return "".join(content)
+    
